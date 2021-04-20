@@ -10,7 +10,7 @@ const Name = "swagger"
 
 var (
 	swaggerMu sync.RWMutex
-	swag      Swagger
+	swag      map[string]Swagger
 )
 
 // Swagger is a interface to read swagger document.
@@ -26,16 +26,28 @@ func Register(name string, swagger Swagger) {
 		panic("swagger is nil")
 	}
 
-	if swag != nil {
-		panic("Register called twice for swag: " + name)
+	if swag == nil {
+		swag = make(map[string]Swagger)
 	}
-	swag = swagger
+
+	swag[name] = swagger
 }
 
 // ReadDoc reads swagger document.
 func ReadDoc() (string, error) {
-	if swag != nil {
-		return swag.ReadDoc(), nil
+	if rv, ok := swag[Name]; ok {
+		return rv.ReadDoc(), nil
 	}
 	return "", errors.New("not yet registered swag")
+}
+
+// Read Named Swagger Doc
+func ReadDocName(name string) (string, error) {
+	if swag == nil {
+		return "", errors.New("no swag has yet been registered")
+	}
+	if rv, ok := swag[name]; ok {
+		return rv.ReadDoc(), nil
+	}
+	return "", errors.New("swag not registered: " + name)
 }
